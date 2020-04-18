@@ -1,9 +1,12 @@
 <?php
+# REPLACEMENT PLACEHOLDERS:
+# RANDOM:FRONTEND_COOKIE_KEY32
+# END
+
 return [
-    'components' => [
-        'request' => [
-            // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
-            'cookieValidationKey' => '',
-        ],
-    ],
+	'components' => [
+		'request' => [
+			'cookieValidationKey' => 'FRONTEND_COOKIE_KEY32',
+		],
+	],
 ];
