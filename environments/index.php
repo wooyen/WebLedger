@@ -37,7 +37,6 @@ return [
 			'frontend/runtime',
 			'frontend/web/assets',
 		],
-		],
 	],
 	'Production' => [
 		'path' => 'prod',
