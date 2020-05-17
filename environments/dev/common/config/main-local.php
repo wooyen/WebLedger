@@ -6,8 +6,8 @@ return [
 	'components' => [
 		'db' => [
 			'class' => 'yii\db\Connection',
-			'dsn' => 'mysql:host=localhost;dbname=yii2advanced',
-			'username' => 'root',
+			'dsn' => 'mysql:host=localhost;dbname=webledger',
+			'username' => 'webledger',
 			'password' => 'DB_PASSWORD',
 			'charset' => 'utf8',
 		],
