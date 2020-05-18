@@ -2,7 +2,6 @@
 namespace frontend\controllers;
 
 use frontend\models\ResendVerificationEmailForm;
-use frontend\models\VerifyEmailForm;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
@@ -10,6 +9,7 @@ use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
 use common\models\LoginForm;
+use common\models\User;
 use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
@@ -28,7 +28,7 @@ class SiteController extends Controller
 		return [
 			'access' => [
 				'class' => AccessControl::class,
-				'only' => ['logout', 'signup'],
+				'only' => ['logout', 'signup', 'verify-email'],
 				'rules' => [
 					[
 						'actions' => ['signup'],
@@ -36,7 +36,7 @@ class SiteController extends Controller
 						'roles' => ['?'],
 					],
 					[
-						'actions' => ['logout'],
+						'actions' => ['verify-email', 'logout'],
 						'allow' => true,
 						'roles' => ['@'],
 					],
@@ -219,18 +219,21 @@ class SiteController extends Controller
 	 * @throws BadRequestHttpException
 	 * @return yii\web\Response
 	 */
-	public function actionVerifyEmail($token)
-	{
-		try {
-			$model = new VerifyEmailForm($token);
-		} catch (InvalidArgumentException $e) {
-			throw new BadRequestHttpException($e->getMessage());
-		}
-		if ($user = $model->verifyEmail()) {
-			if (Yii::$app->user->login($user)) {
-				Yii::$app->session->setFlash('success', 'Your email has been confirmed!');
-				return $this->goHome();
+	public function actionVerifyEmail($token) {
+		$user = Yii::$app->user->identity;
+		$key = User::EMAIL_VERIFY_TOKEN_KEY . $user->username;
+		$value = Yii::$app->cache->get($key);
+		if (!is_array($value) || count($value) != 2) {
+			if ($value !== false) {
+				Yii::$app->cache-del($key);
 			}
+			Yii::$app->session->setFlash('error', 'Sorry, your token is expired. Please resend your verify token to your Email.');
+			return $this->redirect('changeEmail');
+		}
+		$user->email = $value[0];
+		if ($value[1] == $token && $user->save()) {
+			Yii::$app->session->setFlash('success', 'Your email has been confirmed!');
+			return $this->goHome();
 		}
 
 		Yii::$app->session->setFlash('error', 'Sorry, we are unable to verify your account with provided token.');

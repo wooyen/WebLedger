@@ -31,6 +31,8 @@ class User extends ActiveRecord implements IdentityInterface {
 		self::STATUS_ACTIVE,
 	];
 
+	const EMAIL_VERIFY_TOKEN_KEY = "EmailVerifyToken";
+	const PASSWORD_RESET_TOKEN_KEY = "PasswordResetToken";
 
 	/**
 	 * {@inheritdoc}
@@ -42,8 +44,7 @@ class User extends ActiveRecord implements IdentityInterface {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function behaviors()
-	{
+	public function behaviors() {
 		return [
 			TimestampBehavior::class,
 		];
@@ -54,7 +55,7 @@ class User extends ActiveRecord implements IdentityInterface {
 	 */
 	public function rules() {
 		return [
-			['status', 'default', 'value' => self::STATUS_INACTIVE],
+			['status', 'default', 'value' => self::STATUS_ACTIVE],
 			[['username', 'password_hash'], 'required'],
 			['status', 'in', 'range' => self::STATUS],
 			[['username'], 'string', 'max' => 16],
@@ -85,16 +86,14 @@ class User extends ActiveRecord implements IdentityInterface {
 	/**
 	 * {@inheritdoc}
 	 */
-	public static function findIdentity($id)
-	{
+	public static function findIdentity($id) {
 		return static::findOne(['id' => $id, 'status' => self::STATUS_ACTIVE]);
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public static function findIdentityByAccessToken($token, $type = null)
-	{
+	public static function findIdentityByAccessToken($token, $type = null) {
 		throw new NotSupportedException('"findIdentityByAccessToken" is not implemented.');
 	}
 
@@ -104,8 +103,7 @@ class User extends ActiveRecord implements IdentityInterface {
 	 * @param string $username
 	 * @return static|null
 	 */
-	public static function findByUsername($username)
-	{
+	public static function findByUsername($username) {
 		return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
 	}
 
@@ -160,24 +158,21 @@ class User extends ActiveRecord implements IdentityInterface {
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getId()
-	{
+	public function getId() {
 		return $this->getPrimaryKey();
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getAuthKey()
-	{
+	public function getAuthKey() {
 		return $this->auth_key;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function validateAuthKey($authKey)
-	{
+	public function validateAuthKey($authKey) {
 		return $this->getAuthKey() === $authKey;
 	}
 
@@ -187,8 +182,7 @@ class User extends ActiveRecord implements IdentityInterface {
 	 * @param string $password password to validate
 	 * @return bool if password provided is valid for current user
 	 */
-	public function validatePassword($password)
-	{
+	public function validatePassword($password) {
 		return Yii::$app->security->validatePassword($password, $this->password_hash);
 	}
 
@@ -197,17 +191,30 @@ class User extends ActiveRecord implements IdentityInterface {
 	 *
 	 * @param string $password
 	 */
-	public function setPassword($password)
-	{
+	public function setPassword($password) {
 		$this->password_hash = Yii::$app->security->generatePasswordHash($password);
 	}
 
 	/**
 	 * Generates "remember me" authentication key
 	 */
-	public function generateAuthKey()
-	{
+	public function generateAuthKey() {
 		$this->auth_key = Yii::$app->security->generateRandomString();
+	}
+
+	public function requestChangeEmail($email) {
+		$token = Yii::$app->security->generateRandomString();
+		Yii::$app->cache->set(self::EMAIL_VERIFY_TOKEN_KEY . $this->username, [$email, $token], 7*86400);
+		return Yii::$app->mailer->compose([
+			'html' => 'emailVerify-html',
+			'text' => 'emailVerify-text',
+		], [
+			'username' => $this->username,
+			'token' => $token,
+		])->setFrom([Yii::$app->params['supportEmail'] => Yii::$app->name . ' robot'])
+		->setTo($email)
+		->setSubject('Account registration at ' . Yii::$app->name)
+		->send();
 	}
 
 //	/**
@@ -216,14 +223,6 @@ class User extends ActiveRecord implements IdentityInterface {
 //	public function generatePasswordResetToken()
 //	{
 //		$this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
-//	}
-//
-//	/**
-//	 * Generates new token for email verification
-//	 */
-//	public function generateEmailVerificationToken()
-//	{
-//		$this->verification_token = Yii::$app->security->generateRandomString() . '_' . time();
 //	}
 //
 //	/**
