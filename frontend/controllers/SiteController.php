@@ -1,7 +1,6 @@
 <?php
 namespace frontend\controllers;
 
-use frontend\models\ResendVerificationEmailForm;
 use Yii;
 use yii\base\InvalidArgumentException;
 use yii\web\BadRequestHttpException;
@@ -13,6 +12,7 @@ use common\models\User;
 use frontend\models\PasswordResetRequestForm;
 use frontend\models\ResetPasswordForm;
 use frontend\models\SignupForm;
+use frontend\models\ChangeEmailForm;
 use frontend\models\ContactForm;
 
 /**
@@ -28,7 +28,7 @@ class SiteController extends Controller
 		return [
 			'access' => [
 				'class' => AccessControl::class,
-				'only' => ['logout', 'signup', 'verify-email'],
+				'only' => ['logout', 'signup', 'verify-email', 'change-email'],
 				'rules' => [
 					[
 						'actions' => ['signup'],
@@ -36,7 +36,7 @@ class SiteController extends Controller
 						'roles' => ['?'],
 					],
 					[
-						'actions' => ['verify-email', 'logout'],
+						'actions' => ['verify-email', 'change-email', 'logout'],
 						'allow' => true,
 						'roles' => ['@'],
 					],
@@ -221,12 +221,7 @@ class SiteController extends Controller
 	 */
 	public function actionVerifyEmail($token) {
 		$user = Yii::$app->user->identity;
-		$key = User::EMAIL_VERIFY_TOKEN_KEY . $user->username;
-		$value = Yii::$app->cache->get($key);
-		if (!is_array($value) || count($value) != 2) {
-			if ($value !== false) {
-				Yii::$app->cache-del($key);
-			}
+		if (($value = $this->loadEmailToken($user)) === false) {
 			Yii::$app->session->setFlash('error', 'Sorry, your token is expired. Please resend your verify token to your Email.');
 			return $this->redirect('changeEmail');
 		}
@@ -241,23 +236,38 @@ class SiteController extends Controller
 	}
 
 	/**
-	 * Resend verification email
+	 * Change the email and send verification
 	 *
 	 * @return mixed
 	 */
-	public function actionResendVerificationEmail()
-	{
-		$model = new ResendVerificationEmailForm();
+	public function actionChangeEmail() {
+		$model = new ChangeEmailForm();
+		$user = Yii::$app->user->identity;
 		if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-			if ($model->sendEmail()) {
+			if ($model->changeEmail($user)) {
 				Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
 				return $this->goHome();
 			}
 			Yii::$app->session->setFlash('error', 'Sorry, we are unable to resend verification email for the provided email address.');
 		}
+		if (empty($model->email) && ($value =  $this->loadEmailToken($user)) !== false) {
+			$model->email = $value[0];
+		}
 
-		return $this->render('resendVerificationEmail', [
+		return $this->render('change-email', [
 			'model' => $model
 		]);
+	}
+
+	private function loadEmailToken($user) {
+		$key = User::EMAIL_VERIFY_TOKEN_KEY . $user->username;
+		$value = Yii::$app->cache->get($key);
+		if (!is_array($value) || count($value) != 2) {
+			if ($value !== false) {
+				Yii::$app->cache-del($key);
+			}
+			return false;
+		}
+		return $value;
 	}
 }

@@ -6,7 +6,7 @@
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
 
-$this->title = 'Resend verification email';
+$this->title = 'Change email';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="site-resend-verification-email">
@@ -16,7 +16,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 	<div class="row">
 		<div class="col-lg-5">
-			<?php $form = ActiveForm::begin(['id' => 'resend-verification-email-form']); ?>
+			<?php $form = ActiveForm::begin(['id' => 'change-email-form']); ?>
 
 			<?= $form->field($model, 'email')->textInput(['autofocus' => true]) ?>
 
