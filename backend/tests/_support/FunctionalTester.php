@@ -18,8 +18,8 @@ namespace backend\tests;
  */
 class FunctionalTester extends \Codeception\Actor
 {
-    use _generated\FunctionalTesterActions;
+	use _generated\FunctionalTesterActions;
    /**
-    * Define custom actions here
-    */
+	* Define custom actions here
+	*/
 }
