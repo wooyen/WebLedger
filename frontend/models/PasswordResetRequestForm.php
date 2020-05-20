@@ -3,6 +3,7 @@ namespace frontend\models;
 
 use Yii;
 use yii\base\Model;
+use common\models\PasswordResetToken;
 use common\models\User;
 
 /**
@@ -16,14 +17,13 @@ class PasswordResetRequestForm extends Model
 	/**
 	 * {@inheritdoc}
 	 */
-	public function rules()
-	{
+	public function rules() {
 		return [
 			['email', 'trim'],
 			['email', 'required'],
 			['email', 'email'],
 			['email', 'exist',
-				'targetClass' => '\common\models\User',
+				'targetClass' => User::class,
 				'filter' => ['status' => User::STATUS_ACTIVE],
 				'message' => 'There is no user with this email address.'
 			],
@@ -35,8 +35,7 @@ class PasswordResetRequestForm extends Model
 	 *
 	 * @return bool whether the email was send
 	 */
-	public function sendEmail()
-	{
+	public function sendEmail() {
 		/* @var $user User */
 		$user = User::findOne([
 			'status' => User::STATUS_ACTIVE,
@@ -44,23 +43,33 @@ class PasswordResetRequestForm extends Model
 		]);
 
 		if (!$user) {
+			Yii::info("Send password reset email failed: user not found for {$this->email}.", __METHOD__);
 			return false;
 		}
-		
-		if (!User::isPasswordResetTokenValid($user->password_reset_token)) {
-			$user->generatePasswordResetToken();
-			if (!$user->save()) {
+		if (($token = $user->validPasswordResetToken) == null) {
+			$token = new PasswordResetToken;
+			$token->user_id = $user->id;
+			$token->requestIP = Yii::$app->request->userIP;
+			$token->expire = time() + Yii::$app->params['user.passwordResetTokenExpire'];
+			do {
+				$token->token = Yii::$app->security->generateRandomString();
+			} while (!$token->validate('token'));
+			if (!$token->save()) {
+				Yii::error([
+					"Save new PasswordRestToken failed",
+					'error' => $token->errors,
+				], __METHOD__);
 				return false;
 			}
 		}
 
-		return Yii::$app
-			->mailer
-			->compose(
-				['html' => 'passwordResetToken-html', 'text' => 'passwordResetToken-text'],
-				['user' => $user]
-			)
-			->setFrom([Yii::$app->params['supportEmail'] => Yii::$app->name . ' robot'])
+		return Yii::$app->mailer->compose([
+				'html' => 'passwordResetToken-html',
+				'text' => 'passwordResetToken-text'
+			], [
+				'username' => $user->username,
+				'token' => $token->token,
+			])->setFrom([Yii::$app->params['supportEmail'] => Yii::$app->name . ' robot'])
 			->setTo($this->email)
 			->setSubject('Password reset for ' . Yii::$app->name)
 			->send();

@@ -17,11 +17,12 @@ class m130524_201442_init extends Migration
 			'username' => $this->char(16)->notNull()->unique(),
 			'auth_key' => $this->char(32)->notNull()->defaultValue(''),
 			'password_hash' => $this->string()->notNull(),
-//			'password_reset_token' => $this->string()->unique(),
 			'email' => $this->string()->null()->unique(),
 			'status' => $this->smallInteger()->notNull()->defaultValue(10),
 			'created_at' => $this->bigInteger()->notNull(),
 			'updated_at' => $this->bigInteger()->notNull(),
+			'INDEX auth_key (auth_key)',
+			'INDEX status (status)',
 		], $tableOptions);
 	}
 

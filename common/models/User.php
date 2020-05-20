@@ -107,54 +107,6 @@ class User extends ActiveRecord implements IdentityInterface {
 		return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
 	}
 
-//	/**
-//	 * Finds user by password reset token
-//	 *
-//	 * @param string $token password reset token
-//	 * @return static|null
-//	 */
-//	public static function findByPasswordResetToken($token)
-//	{
-//		if (!static::isPasswordResetTokenValid($token)) {
-//			return null;
-//		}
-//
-//		return static::findOne([
-//			'password_reset_token' => $token,
-//			'status' => self::STATUS_ACTIVE,
-//		]);
-//	}
-//
-	/**
-	 * Finds user by verification email token
-	 *
-	 * @param string $token verify email token
-	 * @return static|null
-	 */
-	public static function findByVerificationToken($token) {
-		return static::findOne([
-			'verification_token' => $token,
-			'status' => self::STATUS_INACTIVE
-		]);
-	}
-
-//	/**
-//	 * Finds out if password reset token is valid
-//	 *
-//	 * @param string $token password reset token
-//	 * @return bool
-//	 */
-//	public static function isPasswordResetTokenValid($token)
-//	{
-//		if (empty($token)) {
-//			return false;
-//		}
-//
-//		$timestamp = (int) substr($token, strrpos($token, '_') + 1);
-//		$expire = Yii::$app->params['user.passwordResetTokenExpire'];
-//		return $timestamp + $expire >= time();
-//	}
-//
 	/**
 	 * {@inheritdoc}
 	 */
@@ -217,19 +169,22 @@ class User extends ActiveRecord implements IdentityInterface {
 		->send();
 	}
 
-//	/**
-//	 * Generates new password reset token
-//	 */
-//	public function generatePasswordResetToken()
-//	{
-//		$this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
-//	}
-//
-//	/**
-//	 * Removes password reset token
-//	 */
-//	public function removePasswordResetToken()
-//	{
-//		$this->password_reset_token = null;
-//	}
+	/**
+	 * Gets query for [[PasswordResetTokens]].
+	 *
+	 * @return \yii\db\ActiveQuery
+	 */
+	public function getPasswordResetToken() {
+		return $this->hasMany(PasswordResetToken::class, ['user_id' => 'id']);
+	}
+
+	/**
+	 * Gets query for valid [[PasswordResetTokens]].
+	 *
+	 * @return \yii\db\ActiveQuery
+	 */
+	public function getValidPasswordResetToken() {
+		return $this->hasOne(PasswordResetToken::class, ['user_id' => 'id'])->andWhere(['verifyIP' => ''])->andWhere(['<', 'expire', time()]);
+	}
+
 }
