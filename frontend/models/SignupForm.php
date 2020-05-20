@@ -13,7 +13,7 @@ class SignupForm extends Model
 	public $username;
 	public $email;
 	public $password;
-
+	public $password2;
 
 	/**
 	 * {@inheritdoc}
@@ -21,19 +21,27 @@ class SignupForm extends Model
 	public function rules()
 	{
 		return [
-			['username', 'trim'],
-			['username', 'required'],
+			[['username', 'email'], 'trim'],
+			[['username', 'email', 'password', 'password2'], 'required'],
 			['username', 'unique', 'targetClass' => User::class, 'message' => 'This username has already been taken.'],
 			['username', 'string', 'min' => 2, 'max' => 16],
-
-			['email', 'trim'],
-			['email', 'required'],
 			['email', 'email'],
 			['email', 'string', 'max' => 255],
 			['email', 'unique', 'targetClass' => User::class, 'message' => 'This email address has already been taken.'],
-
-			['password', 'required'],
 			['password', 'string', 'min' => 6],
+			['password2', 'compare', 'compareAttribute' => 'password'],
+		];
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function attributeLabels() {
+		return [
+			'username' => Yii::t('common', 'Username'),
+			'email' => Yii::t('common', 'Email'),
+			'password' => Yii::t('common', 'Password'),
+			'password2' => Yii::t('common', 'Confirm password'),
 		];
 	}
 

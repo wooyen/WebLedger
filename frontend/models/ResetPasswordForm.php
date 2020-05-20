@@ -12,6 +12,7 @@ use yii\base\Model;
 class ResetPasswordForm extends Model
 {
 	public $password;
+	public $password2;
 
 	/**
 	 * @var \common\models\PasswordResetToken
@@ -42,8 +43,19 @@ class ResetPasswordForm extends Model
 	 */
 	public function rules() {
 		return [
-			['password', 'required'],
+			[['password', 'password2'], 'required'],
 			['password', 'string', 'min' => 6],
+			['password2', 'compare', 'compareAttribute' => 'password'],
+		];
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function attributeLabels() {
+		return [
+			'password' => Yii::t('common', 'Password'),
+			'password2' => Yii::t('common', 'Confirm Password'),
 		];
 	}
 
