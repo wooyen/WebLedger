@@ -1,4 +1,7 @@
 <?php
+
+use yii\console\controllers\FixtureController;
+
 $params = array_merge(
 	require __DIR__ . '/../../common/config/params.php',
 	require __DIR__ . '/../../common/config/params-local.php',
@@ -17,16 +20,15 @@ return [
 	],
 	'controllerMap' => [
 		'fixture' => [
-			'class' => 'yii\console\controllers\FixtureController',
+			'class' => FixtureController::class,
 			'namespace' => 'common\fixtures',
-		  ],
+		],
 	],
 	'components' => [
 		'log' => [
 			'targets' => [
-				[
-					'class' => 'yii\log\FileTarget',
-					'levels' => ['error', 'warning'],
+				'app' => [
+					'categories' => ['cosole*'],
 				],
 			],
 		],

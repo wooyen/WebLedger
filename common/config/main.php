@@ -2,6 +2,7 @@
 
 use yii\caching\FileCache;
 use yii\i18n\PhpMessageSource;
+use yii\log\FileTarget;
 
 return [
 	'aliases' => [
@@ -21,9 +22,10 @@ return [
 			],
 		],
 		'log' => [
+			'traceLevel' => YII_DEBUG ? 3 : 0,
 			'targets' => [
 				'app' => [
-					'class' => 'yii\log\FileTarget',
+					'class' => FileTarget::class,
 					'rotateByCopy' => false,
 					'levels' => [
 						'error',
@@ -33,7 +35,7 @@ return [
 					'categories' => ['common*'],
 				],
 				'yii' => [
-					'class' => 'yii\log\FileTarget',
+					'class' => FileTarget::class,
 					'rotateByCopy' => false,
 					'levels' => [
 						'error',
