@@ -28,8 +28,10 @@ return [
 			'name' => 'advanced-frontend',
 		],
 		'log' => [
-			'app' => [
-				'categories' => ['frontend*'],
+			'targets' => [
+				'app' => [
+					'categories' => ['frontend*'],
+				],
 			],
 		],
 		'errorHandler' => [
