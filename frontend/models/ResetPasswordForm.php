@@ -31,7 +31,7 @@ class ResetPasswordForm extends Model
 		if (empty($token) || !is_string($token)) {
 			throw new InvalidArgumentException('Password reset token cannot be blank.');
 		}
-		$this->_token = PasswordResetToken::find()->where(['token' => $token, 'verifyIP' => ''])->andWhere(['>=', 'expire', time()])->one();
+		$this->_token = PasswordResetToken::find()->where(['token' => $token, 'verifyIP' => ''])->andWhere(['>', 'expire', time()])->one();
 		if (!$this->_token) {
 			throw new InvalidArgumentException('Wrong password reset token.');
 		}

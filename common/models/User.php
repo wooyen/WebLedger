@@ -184,7 +184,7 @@ class User extends ActiveRecord implements IdentityInterface {
 	 * @return \yii\db\ActiveQuery
 	 */
 	public function getValidPasswordResetToken() {
-		return $this->hasOne(PasswordResetToken::class, ['user_id' => 'id'])->andWhere(['verifyIP' => ''])->andWhere(['<', 'expire', time()]);
+		return $this->hasOne(PasswordResetToken::class, ['user_id' => 'id'])->andWhere(['verifyIP' => ''])->andWhere(['>', 'expire', time()]);
 	}
 
 }
