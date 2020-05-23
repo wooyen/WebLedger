@@ -60,7 +60,7 @@ class SignupFormTest extends \Codeception\Test\Unit
 		expect($mail)->isInstanceOf('yii\mail\MessageInterface');
 		expect($mail->getTo())->hasKey('some_email@example.com');
 		expect($mail->getFrom())->hasKey(\Yii::$app->params['supportEmail']);
-		expect($mail->getSubject())->equals('Account registration at ' . \Yii::$app->name);
+		expect($mail->getSubject())->equals('Verify your email address at ' . \Yii::$app->name);
 		expect(str_replace("=\r\n", "", $mail->toString()))->stringContainsString($cached[1]);
 	}
 

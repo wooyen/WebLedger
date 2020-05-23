@@ -165,7 +165,7 @@ class User extends ActiveRecord implements IdentityInterface {
 			'token' => $token,
 		])->setFrom([Yii::$app->params['supportEmail'] => Yii::$app->name . ' robot'])
 		->setTo($email)
-		->setSubject('Account registration at ' . Yii::$app->name)
+		->setSubject('Verify your email address at ' . Yii::$app->name)
 		->send();
 	}
 

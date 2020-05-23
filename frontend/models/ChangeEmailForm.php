@@ -34,6 +34,9 @@ class ChangeEmailForm extends Model
 	 * @return bool whether the email was sent
 	 */
 	public function changeEmail($user) {
+		if (!$this->validate()) {
+			return false;
+		}
 		return $user->requestChangeEmail($this->email);
 	}
 }

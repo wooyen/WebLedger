@@ -5,7 +5,7 @@ namespace frontend\tests\unit\models;
 use Codeception\Stub;
 use Yii;
 use common\fixtures\PasswordResetTokenFixture;
-use common\fixtures\UserFixture as UserFixture;
+use common\fixtures\UserFixture;
 use common\models\User;
 use frontend\models\PasswordResetRequestForm;
 use yii\web\Controller;
