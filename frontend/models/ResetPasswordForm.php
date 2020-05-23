@@ -65,6 +65,9 @@ class ResetPasswordForm extends Model
 	 * @return bool if password was reset.
 	 */
 	public function resetPassword() {
+		if (!$this->validate()) {
+			return false;
+		}
 		$user = $this->_token->user;
 		$user->setPassword($this->password);
 		if (!$user->save(false)) {
