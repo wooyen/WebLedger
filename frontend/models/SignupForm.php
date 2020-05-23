@@ -53,7 +53,11 @@ class SignupForm extends Model
 	public function signup()
 	{
 		if (!$this->validate()) {
-			return null;
+			Yii::info([
+				'validate failed',
+				'error' => $this->errors,
+			], __METHOD__);
+			return false;
 		}
 		
 		$user = new User();
@@ -61,6 +65,10 @@ class SignupForm extends Model
 		$user->setPassword($this->password);
 		$user->generateAuthKey();
 		if (!$user->save()) {
+			Yii::info([
+				'save user failed',
+				'error' => $user->errors,
+			], __METHOD__);
 			return false;
 		}
 		Yii::$app->user->login($user);
