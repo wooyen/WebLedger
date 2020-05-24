@@ -2,11 +2,15 @@
 
 namespace frontend\tests\functional;
 
+use Yii;
 use common\fixtures\UserFixture;
+use common\models\User;
 use frontend\tests\FunctionalTester;
 
-class VerifyEmailCest
-{
+class VerifyEmailCest {
+
+	const USERNAME = 'test2.test';
+	
 	/**
 	 * Load fixtures before db transaction begin
 	 * Called in _before()
@@ -24,45 +28,41 @@ class VerifyEmailCest
 		];
 	}
 
-	public function checkEmptyToken(FunctionalTester $I)
-	{
-		$I->amOnRoute('site/verify-email', ['token' => '']);
-		$I->canSee('Bad Request', 'h1');
-		$I->canSee('Verify email token cannot be blank.');
+	public function _before(FunctionalTester $I) {
+		$I->amOnRoute('/site/login');
+		$I->submitForm('#login-form', [
+			'LoginForm[username]' => self::USERNAME,
+			'LoginForm[password]' => 'Test1234',
+		]);
+		Yii::$app->cache->flush();
 	}
 
-	public function checkInvalidToken(FunctionalTester $I)
-	{
-		$I->amOnRoute('site/verify-email', ['token' => 'wrong_token']);
-		$I->canSee('Bad Request', 'h1');
-		$I->canSee('Wrong verify email token.');
+	public function checkNotExistToken(FunctionalTester $I) {
+		$I->amOnRoute('/site/verify-email', ['token' => '']);
+		$I->seeInCurrentUrl('/site/change-email');
+		$I->canSee('Sorry, the token does not exist or has expired. Please resend your verify token to your Email.');
 	}
 
-	public function checkNoToken(FunctionalTester $I)
-	{
-		$I->amOnRoute('site/verify-email');
-		$I->canSee('Bad Request', 'h1');
-		$I->canSee('Missing required parameters: token');
+	private function prepareToken($email, $token) {
+		Yii::$app->cache->set(User::EMAIL_VERIFY_TOKEN_KEY . self::USERNAME, [$email, $token], 3600);
 	}
 
-	public function checkAlreadyActivatedToken(FunctionalTester $I)
-	{
-		$I->amOnRoute('site/verify-email', ['token' => 'already_used_token_1548675330']);
-		$I->canSee('Bad Request', 'h1');
-		$I->canSee('Wrong verify email token.');
+	public function checkInvalidToken(FunctionalTester $I) {
+		$this->prepareToken('email@mail.com', 'correct_token');
+		$I->amOnRoute('/site/verify-email', ['token' => 'wrong_token']);
+		$I->seeInCurrentUrl('/');
+		$I->canSee('Sorry, we are unable to verify your account with provided token.');
 	}
 
-	public function checkSuccessVerification(FunctionalTester $I)
-	{
-		$I->amOnRoute('site/verify-email', ['token' => '4ch0qbfhvWwkcuWqjN8SWRq72SOw1KYT_1548675330']);
+	public function checkSuccessVerification(FunctionalTester $I) {
+		$this->prepareToken('email@mail.com', 'correct_token');
+		$I->amOnRoute('/site/verify-email', ['token' => 'correct_token']);
+		$I->seeInCurrentUrl('/');
 		$I->canSee('Your email has been confirmed!');
-		$I->canSee('Congratulations!', 'h1');
-		$I->see('Logout (test.test)', 'form button[type=submit]');
 
 		$I->seeRecord('common\models\User', [
-		   'username' => 'test.test',
-		   'email' => 'test@mail.com',
-		   'status' => \common\models\User::STATUS_ACTIVE
+		   'username' => 'test2.test',
+		   'email' => 'email@mail.com',
 		]);
 	}
 }

@@ -222,8 +222,8 @@ class SiteController extends Controller
 	public function actionVerifyEmail($token) {
 		$user = Yii::$app->user->identity;
 		if (($value = $this->loadEmailToken($user)) === false) {
-			Yii::$app->session->setFlash('error', 'Sorry, your token is expired. Please resend your verify token to your Email.');
-			return $this->redirect('changeEmail');
+			Yii::$app->session->setFlash('error', 'Sorry, the token does not exist or has expired. Please resend your verify token to your Email.');
+			return $this->redirect('change-email');
 		}
 		$user->email = $value[0];
 		if ($value[1] == $token && $user->save()) {
