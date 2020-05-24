@@ -5,9 +5,8 @@ namespace frontend\tests\functional;
 use common\fixtures\UserFixture;
 use frontend\tests\FunctionalTester;
 
-class ResendVerificationEmailCest
-{
-	protected $formId = '#resend-verification-email-form';
+class ChangeEmailCest {
+	protected $formId = '#change-email-form';
 
 
 	/**
@@ -27,21 +26,25 @@ class ResendVerificationEmailCest
 		];
 	}
 
-	public function _before(FunctionalTester $I)
-	{
-		$I->amOnRoute('/site/resend-verification-email');
+	public function _before(FunctionalTester $I) {
+		$I->amOnRoute('/site/login');
+		$I->submitForm('#login-form', [
+			'LoginForm[username]' => 'test2.test',
+			'LoginForm[password]' => 'Test1234',
+		]);
+		$I->amOnRoute('/site/change-email');
 	}
 
 	protected function formParams($email)
 	{
 		return [
-			'ResendVerificationEmailForm[email]' => $email
+			'ChangeEmailForm[email]' => $email
 		];
 	}
 
 	public function checkPage(FunctionalTester $I)
 	{
-		$I->see('Resend verification email', 'h1');
+		$I->see('Change email', 'h1');
 		$I->see('Please fill out your email. A verification email will be sent there.');
 	}
 
@@ -57,27 +60,19 @@ class ResendVerificationEmailCest
 		$I->seeValidationError('Email is not a valid email address.');
 	}
 
-	public function checkWrongEmail(FunctionalTester $I)
-	{
-		$I->submitForm($this->formId, $this->formParams('wrong@email.com'));
-		$I->seeValidationError('There is no user with this email address.');
-	}
 
 	public function checkAlreadyVerifiedEmail(FunctionalTester $I)
 	{
 		$I->submitForm($this->formId, $this->formParams('test2@mail.com'));
-		$I->seeValidationError('There is no user with this email address.');
+		$I->seeValidationError('This email address has already been taken.');
+		$I->submitForm($this->formId, $this->formParams('test@mail.com'));
+		$I->seeValidationError('This email address has already been taken.');
 	}
 
 	public function checkSendSuccessfully(FunctionalTester $I)
 	{
-		$I->submitForm($this->formId, $this->formParams('test@mail.com'));
+		$I->submitForm($this->formId, $this->formParams('new@mail.com'));
 		$I->canSeeEmailIsSent();
-		$I->seeRecord('common\models\User', [
-			'email' => 'test@mail.com',
-			'username' => 'test.test',
-			'status' => \common\models\User::STATUS_INACTIVE
-		]);
 		$I->see('Check your email for further instructions.');
 	}
 }
