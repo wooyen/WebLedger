@@ -11,7 +11,7 @@ class m200519_170531_password_reset_token extends Migration {
 	 * {@inheritdoc}
 	 */
 	public function safeUp() {
-		$tableOptions = $this->db->driverName === 'mysql' ? 'CHARACTER SET utf8 COLLATE utf8_unicode_ci ENGINE=InnoDB' : null;
+		$tableOptions = $this->db->driverName === 'mysql' ? 'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci ENGINE=InnoDB' : null;
 		$this->createTable(self::TBL_NAME, [
 			'id' => $this->bigPrimaryKey(),
 			'user_id' => $this->bigInteger()->notNull(),
