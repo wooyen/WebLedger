@@ -10,11 +10,19 @@ class Migration extends \yii\db\Migration {
 		}
 		parent::createTable($table, $columns, $options);
 	}
-	
+
+	public function createIndex($name, $table, $columns, $unique = false) {
+		if ($this->db->driverName === 'sqlite') {
+			$name = str_replace(['{', '}', '%'], '', $table) . "_$name";
+		}
+		parent::createIndex($name, $table, $columns, $unique);
+	}
+
 	public function addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete = null, $update = null) {
 		if ($this->db->driverName === 'sqlite') {
 			return;
 		}
+		$name = str_replace(['{', '}', '%'], '', $table) . "_$name";
 		parent::addForeignKey($name, $table, $columns, $refTable, $refColumns, $delete, $update);
 	}
 }
