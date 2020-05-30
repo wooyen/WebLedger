@@ -23,10 +23,12 @@ use yii\web\IdentityInterface;
  */
 class User extends ActiveRecord implements IdentityInterface {
 	const STATUS_DELETED = 0;
+	const STATUS_SYSTEM = 1;
 	const STATUS_INACTIVE = 9;
 	const STATUS_ACTIVE = 10;
 	const STATUS = [
 		self::STATUS_DELETED,
+		self::STATUS_SYSTEM,
 		self::STATUS_INACTIVE,
 		self::STATUS_ACTIVE,
 	];
@@ -175,7 +177,7 @@ class User extends ActiveRecord implements IdentityInterface {
 	 * @return \yii\db\ActiveQuery
 	 */
 	public function getPasswordResetToken() {
-		return $this->hasMany(PasswordResetToken::class, ['user_id' => 'id']);
+		return $this->hasMany(PasswordResetToken::class, ['user_id' => 'id'])->inverseOf('user');
 	}
 
 	/**
@@ -185,6 +187,29 @@ class User extends ActiveRecord implements IdentityInterface {
 	 */
 	public function getValidPasswordResetToken() {
 		return $this->hasOne(PasswordResetToken::class, ['user_id' => 'id'])->andWhere(['verifyIP' => ''])->andWhere(['>', 'expire', time()]);
+	}
+
+	/**
+	 * Gets query for [[MyCurrency]].
+	 *
+	 * @return \yii\db\ActiveQuery
+	 */
+	public function getMyCurrencies() {
+		return $this->hasMany(Currency::class, ['user_id' => 'id'])->orderBy(['weight' => SORT_DESC])->inverseOf('user');
+	}
+
+	/**
+	 * Gets query for [[AllCurrency]].
+	 *
+	 * @return array
+	 */
+	public function getAllCurrencies() {
+		return Currency::find()
+			->joinWith('user u')
+			->where(['user_id' => $this->id])
+			->orWhere(['u.status' => User::STATUS_SYSTEM])
+			->orderBy(['weight' => SORT_DESC])
+			->all();
 	}
 
 }
